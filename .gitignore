@@ -1,0 +1,15 @@
+# Binaries (cpu/build.sh, gpu/compile-gpu.sh)
+/cpu/gcc/
+/cpu/clang/
+/gpu/*-gpu-speed
+# Output of cpu/go.sh, cpu/run.sh, gpu/compile-gpu.sh, and gpu/test-gpu.sh
+/cpu/build.log
+/cpu/go.log
+/cpu/freq.log
+/cpu/gcc.out
+/cpu/clang.out
+/gpu/system.txt
+/gpu/*.sass
+/gpu/speed-gpu
+/gpu/clocks.csv
+nohup.out
