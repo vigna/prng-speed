@@ -26,7 +26,7 @@ Generators”](https://arxiv.org/abs/2610.27313).
     - `mwc/`: multiply-with-carry generators (MWC, GMWC, CMWC).
     - `congruential/`: LCGs and MCGs (PCG, Lehmer, `java.util.Random`),
       MRG32k3a, MIXMAX.
-    - `f2-linear/`: other generators based on linear recurrences over **F**₂: the
+    - `f2-linear/`: other generators based on linear recurrences over 𝐅₂: the
       Mersenne Twister, SFMT and dSFMT (with their sources), WELL, MELG,
       LFSR258, XSadd.
     - `crypto/`: AES in counter mode, ChaCha8 and ChaCha20 (SSE2).
