@@ -83,7 +83,10 @@ checked out on Windows.
   occupied multiprocessors.
 - The timing is the minimum over five runs for each block size in {128, 256,
   512, 1024}, in ps per 32-bit output of the whole GPU (the inverse of its
-  throughput; 64-bit outputs count as two 32-bit outputs).
+  throughput; 64-bit outputs count as two 32-bit outputs). `summarize-gpu.py`
+  also reports this time multiplied by the number of multiprocessors, that is,
+  the time of a single multiprocessor, the unit of a GPU analogous to a core of
+  a CPU.
 - `test-gpu.sh` locks the clock of the GPU at its maximum with `nvidia-smi -lgc`
   and resets it at the end. The clock does not always obey: the H100 SXM runs
   at 1830 MHz with the clock locked at 1980 MHz. So `test-gpu.sh` samples the

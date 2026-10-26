@@ -4,8 +4,10 @@
 and, if cuobjdump is available, the SASS dumps; all but speed-gpu are optional;
 default DIR: the directory of this script) and prints, for every generator, the minimum over
 the five runs for each number of threads per block of the time per 32-bit output
-of the whole GPU (ps), the corresponding throughput, the number of threads per block
-of the minimum, and the registers per thread of the kernel."""
+of the whole GPU (ps), the same time multiplied by the number of multiprocessors (the
+time of a single multiprocessor, analogous to a core of a CPU), the corresponding
+throughput, the number of threads per block of the minimum, and the registers per
+thread of the kernel."""
 import collections, glob, os, re, sys
 D = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
 
@@ -37,6 +39,7 @@ assert all(len(r) == 5 for g in runs.values() for r in g.values()) and all(len(g
 gpu = re.search(r"\(([^,]*), \d+ blocks", open(f"{D}/speed-gpu").read()).group(1)
 blocks = {int(m[0]) // int(m[1]) for m in re.findall(r"(\d+) blocks x \d+ threads, at most (\d+) blocks", open(f"{D}/speed-gpu").read())}
 assert len(blocks) == 1, blocks
+sms = blocks.pop()
 
 def search(pattern, text, default="unknown"):
     m = re.search(pattern, text, re.M)
@@ -74,7 +77,7 @@ def regs(g):
 
 print("GPU timings")
 print()
-print(f"GPU: {gpu} ({blocks.pop()} multiprocessors), driver {driver}; nvcc {nvcc}; host compiler {host}")
+print(f"GPU: {gpu} ({sms} multiprocessors), driver {driver}; nvcc {nvcc}; host compiler {host}")
 print(f"Flags: {flags}; clock locked at the maximum by test-gpu.sh")
 if busy:
     print(f"Clock samples (4 per second) while a kernel runs (power > {idle:.0f} + 50 W): {len(busy)} of {len(rows)};")
@@ -82,12 +85,12 @@ if busy:
     print("  active throttle reasons: " + ", ".join(f"{c} ({n})" for c, n in reasons.most_common()))
     print(f"  maximum power draw {power:.0f} W, maximum temperature {temp} C")
 print("Value: minimum over five runs for each number of threads per block in {128, 256, 512, 1024},")
-print(f"  {calls} calls per thread, one wave of blocks; ps per 32-bit output of the whole GPU")
+print(f"  {calls} calls per thread, one wave of blocks; ps per 32-bit output of the whole GPU and of a multiprocessor (SM)")
 print()
-print(f"{'PRNG':36}{'ps/32 bits':>11}{'G words/s':>11}{'threads':>9}{'regs':>6}")
+print(f"{'PRNG':36}{'ps/32 bits':>11}{'SM ps/32 bits':>15}{'G words/s':>11}{'threads':>9}{'regs':>6}")
 for g, name, _ in GENS:
     best = min((min(r), t) for t, r in runs[g].items())
-    print(f"{name:36}{1000 * best[0]:11.3f}{1 / best[0]:11.0f}{best[1]:9}{regs(g):>6}")
+    print(f"{name:36}{1000 * best[0]:11.3f}{1000 * sms * best[0]:15.1f}{1 / best[0]:11.0f}{best[1]:9}{regs(g):>6}")
 print()
 print("Spread of the five runs (max/min - 1), worst over the numbers of threads per block:")
 print("  " + ", ".join(f"{g} {max(max(r) / min(r) - 1 for r in runs[g].values()):.1e}" for g, _, _ in GENS))
