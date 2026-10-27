@@ -50,10 +50,12 @@ for t in TITLES:
     print(f"{'PRNG':22}{'ns':>8}{'cyc/B':>8}{'ns':>8}{'cyc/B':>8}")
     for name, table, src, kind, *extra in rows:
         row = f"{name:22}"
+        # Vectorized generators need a third decimal (the website shows it)
+        p = 3 if kind == "vect" else 2
         for cc in ("gcc", "clang"):
             if name not in res[cc]:
                 row += f"{'-':>8}{'-':>8}"
                 continue
             ns = res[cc][name]
-            row += f"{ns:8.2f}{ns * ghz / 8:8.2f}"
+            row += f"{ns:8.{p}f}{ns * ghz / 8:8.{p}f}"
         print(row)

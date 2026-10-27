@@ -68,11 +68,9 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "USAGE: %s ITERATIONS\n", argv[0]);
 		exit(1);
 	}
+	// No check that n is positive: knowing it, Clang rewrites the loops below
+	// counting upwards, which changes the timings (up to 27% on AMD Zen 5)
 	const long long int n = strtoll(argv[1], NULL, 0);
-	if (n <= 0) {
-		fprintf(stderr, "The number of iterations must be positive\n");
-		exit(1);
-	}
 
 	INIT // Here you can optionally inject initialization code
 
