@@ -1,0 +1,28 @@
+GPU timings
+
+GPU: NVIDIA H100 80GB HBM3 (132 multiprocessors), driver 595.112.07; nvcc V13.2.51; host compiler g++ (GCC) 11.5.0 20240719 (Red Hat 11.5.0-5)
+Flags: -O3 -arch=native -Xcompiler -Wall; clock locked at the maximum by test-gpu.sh
+Clock samples (4 per second) while a kernel runs (power > 121 + 50 W): 3108 of 3112;
+  SM clock: 1830 MHz (3108)
+  active throttle reasons: 0x0000000000000000 (3108)
+  maximum power draw 475 W, maximum temperature 59 C
+Value: minimum over five runs for each number of threads per block in {128, 256, 512, 1024},
+  16777216 calls per thread, one wave of blocks; ps per 32-bit output of the whole GPU and of a multiprocessor (SM)
+
+PRNG                                 ps/32 bits  SM ps/32 bits  G words/s  threads
+MWC64X/32                                 0.227           30.0       4397     1024
+MWC128X/32                                0.238           31.5       4193      512
+xoroshiro64**                             0.424           56.0       2357      512
+xoroshiro64*                              0.356           47.0       2809     1024
+xoshiro128++                              0.439           57.9       2278     1024
+xoshiro128**                              0.440           58.1       2273      256
+xoshiro128+                               0.372           49.1       2688     1024
+MWC128X (64-bit outputs)                  0.382           50.4       2618     1024
+SFC32 (PractRand)                         0.296           39.1       3376      512
+PCG32                                     0.582           76.8       1719     1024
+XORWOW (cuRAND)                           0.359           47.4       2783      512
+Philox4x32-10 (cuRAND, curand4())         0.805          106.3       1242     1024
+MRG32k3a (cuRAND)                         1.775          234.3        563     1024
+
+Spread of the five runs (max/min - 1), worst over the numbers of threads per block:
+  MWC64X_32 6.0e-04, MWC128X_32 6.8e-03, xoroshiro64** 4.0e-04, xoroshiro64* 1.4e-04, xoshiro128++ 3.1e-04, xoshiro128** 3.1e-04, xoshiro128+ 6.1e-04, MWC128X 4.6e-04, sfc32 1.9e-03, pcg32 7.5e-04, xorwow 9.2e-04, philox4x32-10 1.3e-04, MRG32k3a 1.3e-04

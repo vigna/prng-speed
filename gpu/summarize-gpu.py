@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Usage: summarize-gpu.py [DIR]. Reads DIR/{speed-gpu,system.txt,clocks.csv,*.sass}
+"""Usage: summarize-gpu.py [--markdown|--tsv] [DIR]. Reads DIR/{speed-gpu,system.txt,clocks.csv,*.sass}
 (test-gpu.sh writes speed-gpu and clocks.csv, compile-gpu.sh writes system.txt
 and, if cuobjdump is available, the SASS dumps; all but speed-gpu are optional;
 default DIR: the directory of this script) and prints, for every generator, the minimum over
@@ -7,9 +7,15 @@ the five runs for each number of threads per block of the time per 32-bit output
 of the whole GPU (ps), the same time multiplied by the number of multiprocessors (the
 time of a single multiprocessor, analogous to a core of a CPU), the corresponding
 throughput, the number of threads per block of the minimum, and the registers per
-thread of the kernel."""
+thread of the kernel. With --markdown, it prints the two times in GitHub Markdown,
+with links to the sources relative to the root of the repository
+(results/update.py puts them in README.md); with --tsv, one line per generator,
+with full precision (read by the script that updates the website)."""
 import collections, glob, os, re, sys
-D = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
+from urllib.parse import quote
+args = sys.argv[1:]
+fmt = args.pop(0)[2:] if args and args[0] in ("--markdown", "--tsv") else "text"
+D = args[0] if args else os.path.dirname(os.path.abspath(__file__))
 
 # Generator (binary name without -gpu-speed), name on the website, source
 GENS = (("MWC64X_32", "MWC64X/32", "MWC64X_32.c"),
@@ -75,6 +81,31 @@ def regs(g):
     except FileNotFoundError:
         return "?"
 
+best = {g: min((min(r), t) for t, r in runs[g].items()) for g, _, _ in GENS}
+if fmt == "tsv":
+    print("# name\tps/32 bits\tSM ps/32 bits")
+    for g, _, _ in GENS:
+        print(f"{g}\t{1000 * best[g][0]!r}\t{1000 * sms * best[g][0]!r}")
+    sys.exit()
+if fmt == "markdown":
+    print("### Comparison of 32-bit PRNGs on a GPU")
+    print()
+    print("| PRNG | ps/32 bits (GPU) | ps/32 bits (multiprocessor) |")
+    print("|:--|--:|--:|")
+    for g, name, _ in GENS:
+        # Asterisks of scramblers escaped, as Markdown would take them as emphasis
+        label = name.replace("*", "\\*")
+        print(f"| [{label}](gpu/{quote(g + '-gpu-speed.cu')}) | {1000 * best[g][0]:.3f} | {1000 * sms * best[g][0]:.1f} |")
+    clock = ""
+    if busy:
+        clock = "; SM clock while kernels run: " + ", ".join(f"{c} ({n} samples)" for c, n in clocks.most_common())
+    print()
+    print(f"GPU session on an {gpu} ({sms} multiprocessors), driver {driver}, nvcc {nvcc}, flags `{flags}`{clock}. "
+          f"Times are the minimum over five runs for each number of threads per block in {{128, 256, 512, 1024}}, "
+          f"with {calls} calls per thread, in ps per 32-bit output of the whole GPU (the inverse of its throughput) "
+          f"and of a multiprocessor (the time of the whole GPU multiplied by the number of multiprocessors).")
+    sys.exit()
+
 print("GPU timings")
 print()
 print(f"GPU: {gpu} ({sms} multiprocessors), driver {driver}; nvcc {nvcc}; host compiler {host}")
@@ -87,10 +118,12 @@ if busy:
 print("Value: minimum over five runs for each number of threads per block in {128, 256, 512, 1024},")
 print(f"  {calls} calls per thread, one wave of blocks; ps per 32-bit output of the whole GPU and of a multiprocessor (SM)")
 print()
-print(f"{'PRNG':36}{'ps/32 bits':>11}{'SM ps/32 bits':>15}{'G words/s':>11}{'threads':>9}{'regs':>6}")
+# Registers only if there are SASS dumps (results/gpu has none)
+sass = bool(glob.glob(f"{D}/*.sass"))
+print(f"{'PRNG':36}{'ps/32 bits':>11}{'SM ps/32 bits':>15}{'G words/s':>11}{'threads':>9}" + (f"{'regs':>6}" if sass else ""))
 for g, name, _ in GENS:
-    best = min((min(r), t) for t, r in runs[g].items())
-    print(f"{name:36}{1000 * best[0]:11.3f}{1000 * sms * best[0]:15.1f}{1 / best[0]:11.0f}{best[1]:9}{regs(g):>6}")
+    b = best[g]
+    print(f"{name:36}{1000 * b[0]:11.3f}{1000 * sms * b[0]:15.1f}{1 / b[0]:11.0f}{b[1]:9}" + (f"{regs(g):>6}" if sass else ""))
 print()
 print("Spread of the five runs (max/min - 1), worst over the numbers of threads per block:")
 print("  " + ", ".join(f"{g} {max(max(r) / min(r) - 1 for r in runs[g].values()):.1e}" for g, _, _ in GENS))
