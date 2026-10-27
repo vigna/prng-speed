@@ -2,12 +2,13 @@
 /cpu/gcc/
 /cpu/clang/
 /gpu/*-gpu-speed
-# Output of cpu/go.sh, cpu/run.sh, gpu/compile-gpu.sh, and gpu/test-gpu.sh
+# Output of cpu/website.sh, cpu/go.sh, cpu/run.sh, gpu/compile-gpu.sh, and gpu/test-gpu.sh
 /cpu/build.log
 /cpu/go.log
 /cpu/freq.log
 /cpu/gcc.out
 /cpu/clang.out
+/cpu/website.txt
 /gpu/system.txt
 /gpu/*.sass
 /gpu/speed-gpu

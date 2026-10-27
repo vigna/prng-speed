@@ -1,4 +1,7 @@
 # name	table	source	kind	extra flags. Tables: main, fp, vect (of prng.di.unimi.it), paper (the rest of the speed table of the MWC paper), other. Kinds (see build.sh): int; novec (int without auto-vectorization); novl (int with -mno-avx512vl); vect (vectorized: no -fno-unroll-loops, GCC adds -fdisable-tree-cunrolli); cxx (C++)
+AES-CTR	main	crypto/aesctr-speed.c	int	
+ChaCha8	main	crypto/chacha8-speed.cpp	cxx	
+ChaCha20	main	crypto/chacha20-speed.cpp	cxx	
 xoshiro256++	main	xoshiro/xoshiro256++-speed.c	int	-DA=17 -DB=45 -DR=23
 MWC192X	main	mwc/MWC192X-speed.c	int	
 xoroshiro128++	main	xoshiro/xoroshiro128++-speed.c	int	-DA=49 -DB=21 -DC=28 -DR=17
@@ -39,7 +42,6 @@ GMWC256-novl	paper	mwc/GMWC256-speed.c	novl
 GMWC256X-novl	paper	mwc/GMWC256X-speed.c	novl	
 Lehmer127	paper	congruential/lehmer127-speed.c	int	
 RomuTrio	paper	other/romutrio-speed.c	int	
-AES-CTR	paper	crypto/aesctr-speed.c	int	
 xoroshiro128**	other	xoshiro/xoroshiro128**-speed.c	int	-DA=24 -DB=16 -DC=37 -DS=5 -DR=7 -DT=9
 xoshiro256**	other	xoshiro/xoshiro256**-speed.c	int	-DA=17 -DB=45 -DS=5 -DR=7 -DT=9
 PCG128-XSH-RS-64	other	congruential/pcg64-speed.c	int	
@@ -56,8 +58,6 @@ xoroshiro1024**	other	xoshiro/xoroshiro1024**-speed.c	int	-DA=25 -DB=27 -DC=36 -
 xorshift1024*	other	xoshiro/xorshift1024starphi-speed.c	int	-DA=31 -DB=11 -DC=30
 xorshift128+	other	xoshiro/xorshift128plus-speed.c	int	-DA=23 -DB=18 -DC=5
 MRG32k3a	other	congruential/MRG32k3a-speed.c	int	
-ChaCha8	other	crypto/chacha8-speed.cpp	cxx	
-ChaCha20	other	crypto/chacha20-speed.cpp	cxx	
 KISS	other	other/kiss-speed.c	int	
 MSWS	other	other/msws-speed.c	int	
 CMWC4096	other	mwc/cmwc4096-speed.c	int	

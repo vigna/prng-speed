@@ -106,13 +106,16 @@ CPU sessions need x86-64 Linux with cpufreq, GCC and Clang (also for C++),
 `taskset`, `lscpu`, passwordless `sudo`, and Python 3.9 or later:
 
 ```sh
+cpu/website.sh 8                  # all CPU timings of the website, summarized in cpu/website.txt
 cpu/go.sh 8                       # fixes the frequency of core 8, builds, and runs everything
 cpu/go.sh 8 main fp vect paper    # only the tables of the website and of the paper
 cpu/summarize.py                  # timings from cpu/{gcc.out,clang.out,freq.log,build.log,go.log}
 ```
 
-`go.sh` takes about half an hour for the tables of the website and of the paper
-on an AMD EPYC 9R45. `build.sh` and `run.sh` can also be used separately: in
+`website.sh` runs `go.sh` on the tables of the website (`main`, `fp`, and
+`vect`) and then `summarize.py`: it is the script to use to regenerate the CPU
+tables of the website. `go.sh` takes about half an hour for the tables of the
+website and of the paper on an AMD EPYC 9R45. `build.sh` and `run.sh` can also be used separately: in
 this case, redirect the output of `build.sh` to `cpu/build.log` if you want
 `summarize.py` to report the versions of the compilers.
 
