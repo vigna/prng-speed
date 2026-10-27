@@ -11,7 +11,6 @@ xoroshiro128+	main	xoshiro/xoroshiro128+-speed.c	int	-DA=24 -DB=16 -DC=37
 GMWC128X	main	mwc/GMWC128X-speed.c	int	
 GMWC256X	main	mwc/GMWC256X-speed.c	int	
 SFC64	main	other/sfc64-speed.c	int	
-SplitMix	main	other/splitmix64-speed.c	int	
 SplitMix-novec	main	other/splitmix64-speed.c	novec	
 PCG-NumPy	main	congruential/pcg64-numpy-speed.c	int	
 PCG-Go	main	congruential/pcg-go-speed.c	int	
@@ -47,6 +46,7 @@ xoshiro256**	other	xoshiro/xoshiro256**-speed.c	int	-DA=17 -DB=45 -DS=5 -DR=7 -D
 PCG128-XSH-RS-64	other	congruential/pcg64-speed.c	int	
 PCG64-DXSM	other	congruential/pcg64dxsm-speed.c	int	
 Lehmer128	other	congruential/lehmer128-speed.c	int	
+SplitMix	other	other/splitmix64-speed.c	int	
 wyrand	other	other/wyrand-speed.c	int	
 wyrand-novec	other	other/wyrand-speed.c	novec	
 xoshiro512+	other	xoshiro/xoshiro512+-speed.c	int	-DA=11 -DB=21

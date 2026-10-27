@@ -24,7 +24,6 @@ xoroshiro128+             0.66    0.37    0.66    0.37
 GMWC128X                  2.04    1.15    2.05    1.16
 GMWC256X                  2.04    1.15    2.06    1.16
 SFC64                     0.49    0.28    0.67    0.38
-SplitMix                  0.10    0.05    0.09    0.05
 SplitMix-novec            0.62    0.35    0.60    0.34
 PCG-NumPy                 1.37    0.77    1.38    0.78
 PCG-Go                    1.45    0.81    1.43    0.81
@@ -47,3 +46,8 @@ xoroshiro128+-vect       0.099   0.056   0.090   0.051
 xoroshiro128++-vect      0.102   0.057   0.100   0.056
 xoshiro256+-vect         0.085   0.048   0.082   0.046
 xoshiro256++-vect        0.091   0.051   0.092   0.052
+
+Other generators (not in the tables)
+                                   GCC           Clang
+PRNG                        ns   cyc/B      ns   cyc/B
+SplitMix                  0.10    0.05    0.09    0.05

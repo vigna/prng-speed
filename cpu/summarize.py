@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-"""Usage: summarize.py [--markdown|--tsv] [DIR]. Reads DIR/{gens.tsv,gcc.out,clang.out,freq.log,build.log,go.log}
+"""Usage: summarize.py [--markdown|--tsv] [DIR]. Reads DIR/{gcc.out,clang.out,freq.log,build.log,go.log}
 (default: the directory of this script, where go.sh leaves them) and prints the
 minimum of the five runs of every generator (ns per 64-bit output, or per
-double) and cycles/B at the mean frequency of the core. With --markdown, the
-tables are in GitHub Markdown, with links to the sources relative to the root of
-the repository (results/update.py puts them in README.md); with --tsv, there is
-one line per generator, with full precision (read by the script that updates
-the website)."""
-import os, statistics, sys
+double) and cycles/B at the mean frequency of the core, by the tables, and in
+the order, of DIR/gens.tsv, or of the gens.tsv of this script if DIR has none
+(as results/cpu). With --markdown, only the tables of the website, in GitHub
+Markdown, with links to the sources relative to the root of the repository
+(results/update.py puts them in README.md); with --tsv, one line per
+generator, with full precision (read by the script that updates the website)."""
+import os, re, statistics, sys
 from urllib.parse import quote
 args = sys.argv[1:]
 fmt = args.pop(0)[2:] if args and args[0] in ("--markdown", "--tsv") else "text"
 D = args[0] if args else os.path.dirname(os.path.abspath(__file__))
-gens = [l.rstrip("\n").split("\t") for l in open(f"{D}/gens.tsv") if not l.startswith("#")]
+G = f"{D}/gens.tsv" if os.path.exists(f"{D}/gens.tsv") else f"{os.path.dirname(os.path.abspath(__file__))}/gens.tsv"
+gens = [l.rstrip("\n").split("\t") for l in open(G) if not l.startswith("#")]
 res = {}
 for cc in ("gcc", "clang"):
     runs = {}
@@ -73,12 +75,12 @@ if fmt != "markdown":
     print("  GCC also -fdisable-tree-cunrolli; novl: also -mno-avx512vl; see build.sh)")
     print("Value: minimum of 5 runs of 3*10^9 outputs; ns per 64-bit output (floating point:")
     print("  per double); cycles/B = ns * GHz / 8")
-for t in TITLES:
+for t in CAPTIONS if fmt == "markdown" else TITLES:
     rows = [g for g in gens if g[1] == t and any(g[0] in res[cc] for cc in res)]
     if not rows:
         continue
     if fmt == "markdown":
-        print(f"### {CAPTIONS.get(t, TITLES[t])}")
+        print(f"### {CAPTIONS[t]}")
         print()
         print("| PRNG | ns/64 bits (GCC) | cycles/B (GCC) | ns/64 bits (Clang) | cycles/B (Clang) |")
         print("|:--|--:|--:|--:|--:|")
@@ -91,15 +93,16 @@ for t in TITLES:
         # Vectorized generators need a third decimal (the website shows it)
         c = cols(name, 3 if kind == "vect" else 2)
         if fmt == "markdown":
-            print(f"| [{esc(name)}](cpu/{quote(src)}) | " + " | ".join(c) + " |")
+            # The website shows only the scalar timing of novec entries, under the plain name
+            print(f"| [{esc(name.removesuffix('-novec'))}](cpu/{quote(src)}) | " + " | ".join(c) + " |")
         else:
             print(f"{name:22}" + "".join(f"{x:>8}" for x in c))
     if fmt == "markdown":
         print()
-# In Markdown the session follows the tables, which come first in README.md
+# In Markdown a short description of the hardware follows the tables
 if fmt == "markdown":
-    compilers = ", ".join(f"`{v.split(': ', 1)[1]}`" for v in ver) or "unknown"
-    print(f"CPU session of {start} to {end} on an {cpu}, every binary alone on one core (SMT active: {smt}), "
-          f"mean frequency of the core {ghz:.3f} GHz; compilers {compilers}, with the flags of "
-          f"[`cpu/build.sh`](cpu/build.sh). Times are the minimum of five runs of 3 × 10⁹ outputs, in ns per "
-          f"64-bit output (floating point: per double); cycles/B are computed at the mean frequency.")
+    model = re.sub(r" \d+-Core Processor$", "", cpu)
+    NAMES = {"gcc": "GCC", "clang": "Clang"}
+    compilers = " and ".join(f"{NAMES[v.split(':')[0]]} {m.group(1)}" for v in ver if (m := re.search(r"(\d+\.\d+\.\d+)", v)))
+    print(f"{model} at {ghz:.1f} GHz, one core; {compilers} (flags in [`cpu/build.sh`](cpu/build.sh)); "
+          f"ns per 64-bit output (floating point: per double), minimum of five runs.")

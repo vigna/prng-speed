@@ -96,14 +96,12 @@ if fmt == "markdown":
         # Asterisks of scramblers escaped, as Markdown would take them as emphasis
         label = name.replace("*", "\\*")
         print(f"| [{label}](gpu/{quote(g + '-gpu-speed.cu')}) | {1000 * best[g][0]:.3f} | {1000 * sms * best[g][0]:.1f} |")
-    clock = ""
-    if busy:
-        clock = "; SM clock while kernels run: " + ", ".join(f"{c} ({n} samples)" for c, n in clocks.most_common())
+    # A short description of the hardware: the clock is the most frequent while kernels run
+    clock = f" at {clocks.most_common(1)[0][0]}" if busy else ""
+    cuda = search(r"V?(\d+\.\d+)", nvcc)
     print()
-    print(f"GPU session on an {gpu} ({sms} multiprocessors), driver {driver}, nvcc {nvcc}, flags `{flags}`{clock}. "
-          f"Times are the minimum over five runs for each number of threads per block in {{128, 256, 512, 1024}}, "
-          f"with {calls} calls per thread, in ps per 32-bit output of the whole GPU (the inverse of its throughput) "
-          f"and of a multiprocessor (the time of the whole GPU multiplied by the number of multiprocessors).")
+    print(f"{gpu}{clock} ({sms} multiprocessors); nvcc {cuda}; ps per 32-bit output of the whole GPU "
+          f"and of a multiprocessor, minimum of five runs.")
     sys.exit()
 
 print("GPU timings")
