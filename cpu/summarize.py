@@ -5,8 +5,9 @@ minimum of the five runs of every generator (ns per 64-bit output, or per
 double) and cycles/B at the mean frequency of the core, by the tables, and in
 the order, of DIR/gens.tsv, or of the gens.tsv of this script if DIR has none
 (as results/cpu). With --markdown, only the tables of the website, in GitHub
-Markdown, with links to the sources relative to the root of the repository
-(results/update.py puts them in README.md); with --tsv, one line per
+Markdown, one for each compiler, fastest first (GCC in sight, Clang in a
+collapsed <details> section), with links to the sources relative to the root
+of the repository (results/update.py puts them in README.md); with --tsv, one line per
 generator, with full precision (read by the script that updates the website)."""
 import os, re, statistics, sys
 from urllib.parse import quote
@@ -40,10 +41,10 @@ TITLES = {"main": "Comparison of PRNGs (prng.di.unimi.it)", "fp": "Floating-poin
           "paper": "Remaining generators of the speed table of the MWC paper",
           "other": "Other generators (not in the tables)"}
 
-def cols(name, p):
-    """ns and cycles/B with GCC and Clang, with p decimals (None: full precision)."""
+def cols(name, p, ccs=("gcc", "clang")):
+    """ns and cycles/B with the compilers ccs, with p decimals (None: full precision)."""
     out = []
-    for cc in ("gcc", "clang"):
+    for cc in ccs:
         if name not in res[cc]:
             out += ["-", "-"]
             continue
@@ -64,45 +65,56 @@ if fmt == "tsv":
 # The captions of the tables of the website
 CAPTIONS = {"main": "Comparison of PRNGs", "fp": "Comparison of floating-point PRNGs",
             "vect": "Comparison of vectorized PRNGs"}
-if fmt != "markdown":
-    print(f"Session: {start} - {end}")
-    print(f"Machine: {cpu}; every binary runs alone on one core; SMT active: {smt}")
-    print(f"  {core or 'frequency settings unknown (run.sh without go.sh)'}; mean frequency during the runs {ghz:.3f} GHz")
-    for v in ver:
-        print("  " + v)
-    print("Flags: -fno-unroll-loops -Wall -Wno-unused-variable -O3 -march=native -std=c99")
-    print("  (vectorized: -Wall -Wno-unused-variable -O3 -ftree-vectorize -march=native -std=c99,")
-    print("  GCC also -fdisable-tree-cunrolli; novl: also -mno-avx512vl; see build.sh)")
-    print("Value: minimum of 5 runs of 3*10^9 outputs; ns per 64-bit output (floating point:")
-    print("  per double); cycles/B = ns * GHz / 8")
-for t in CAPTIONS if fmt == "markdown" else TITLES:
+NAMES = {"gcc": "GCC", "clang": "Clang"}
+if fmt == "markdown":
+    for t in CAPTIONS:
+        if not any(g[1] == t and g[0] in res[cc] for g in gens for cc in res):
+            continue
+        print(f"### {CAPTIONS[t]}")
+        print()
+        # A table for each compiler, fastest first; GitHub renders <details> as a
+        # switch, open for GCC and closed for Clang
+        for cc in ("gcc", "clang"):
+            rows = sorted((g for g in gens if g[1] == t and g[0] in res[cc]), key=lambda g: res[cc][g[0]])
+            if not rows:
+                continue
+            # Markdown inside <details> is rendered only between blank lines
+            print(f"<details{' open' if cc == 'gcc' else ''}><summary>{NAMES[cc]}</summary>")
+            print()
+            print("| PRNG | ns/64 bits | cycles/B |")
+            print("|:--|--:|--:|")
+            for name, table, src, kind, *extra in rows:
+                # Vectorized generators need a third decimal (the website shows it)
+                c = cols(name, 3 if kind == "vect" else 2, (cc,))
+                # The website shows only the scalar timing of novec entries, under the plain name
+                print(f"| [{esc(name.removesuffix('-novec'))}](cpu/{quote(src)}) | " + " | ".join(c) + " |")
+            print()
+            print("</details>")
+            print()
+    # A short description of the hardware follows the tables
+    model = re.sub(r" \d+-Core Processor$", "", cpu)
+    compilers = " and ".join(f"{NAMES[v.split(':')[0]]} {m.group(1)}" for v in ver if (m := re.search(r"(\d+\.\d+\.\d+)", v)))
+    print(f"{model} at {ghz:.1f} GHz, one core; {compilers} (flags in [`cpu/build.sh`](cpu/build.sh)); "
+          f"ns per 64-bit output (floating point: per double), minimum of five runs, fastest first.")
+    sys.exit()
+print(f"Session: {start} - {end}")
+print(f"Machine: {cpu}; every binary runs alone on one core; SMT active: {smt}")
+print(f"  {core or 'frequency settings unknown (run.sh without go.sh)'}; mean frequency during the runs {ghz:.3f} GHz")
+for v in ver:
+    print("  " + v)
+print("Flags: -fno-unroll-loops -Wall -Wno-unused-variable -O3 -march=native -std=c99")
+print("  (vectorized: -Wall -Wno-unused-variable -O3 -ftree-vectorize -march=native -std=c99,")
+print("  GCC also -fdisable-tree-cunrolli; novl: also -mno-avx512vl; see build.sh)")
+print("Value: minimum of 5 runs of 3*10^9 outputs; ns per 64-bit output (floating point:")
+print("  per double); cycles/B = ns * GHz / 8")
+for t in TITLES:
     rows = [g for g in gens if g[1] == t and any(g[0] in res[cc] for cc in res)]
     if not rows:
         continue
-    if fmt == "markdown":
-        print(f"### {CAPTIONS[t]}")
-        print()
-        print("| PRNG | ns/64 bits (GCC) | cycles/B (GCC) | ns/64 bits (Clang) | cycles/B (Clang) |")
-        print("|:--|--:|--:|--:|--:|")
-    else:
-        print()
-        print(TITLES[t])
-        print(f"{'':22}{'GCC':>16}{'Clang':>16}")
-        print(f"{'PRNG':22}{'ns':>8}{'cyc/B':>8}{'ns':>8}{'cyc/B':>8}")
+    print()
+    print(TITLES[t])
+    print(f"{'':22}{'GCC':>16}{'Clang':>16}")
+    print(f"{'PRNG':22}{'ns':>8}{'cyc/B':>8}{'ns':>8}{'cyc/B':>8}")
     for name, table, src, kind, *extra in rows:
         # Vectorized generators need a third decimal (the website shows it)
-        c = cols(name, 3 if kind == "vect" else 2)
-        if fmt == "markdown":
-            # The website shows only the scalar timing of novec entries, under the plain name
-            print(f"| [{esc(name.removesuffix('-novec'))}](cpu/{quote(src)}) | " + " | ".join(c) + " |")
-        else:
-            print(f"{name:22}" + "".join(f"{x:>8}" for x in c))
-    if fmt == "markdown":
-        print()
-# In Markdown a short description of the hardware follows the tables
-if fmt == "markdown":
-    model = re.sub(r" \d+-Core Processor$", "", cpu)
-    NAMES = {"gcc": "GCC", "clang": "Clang"}
-    compilers = " and ".join(f"{NAMES[v.split(':')[0]]} {m.group(1)}" for v in ver if (m := re.search(r"(\d+\.\d+\.\d+)", v)))
-    print(f"{model} at {ghz:.1f} GHz, one core; {compilers} (flags in [`cpu/build.sh`](cpu/build.sh)); "
-          f"ns per 64-bit output (floating point: per double), minimum of five runs.")
+        print(f"{name:22}" + "".join(f"{x:>8}" for x in cols(name, 3 if kind == "vect" else 2)))

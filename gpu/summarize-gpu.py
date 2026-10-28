@@ -8,7 +8,7 @@ of the whole GPU (ps), the same time multiplied by the number of multiprocessors
 time of a single multiprocessor, analogous to a core of a CPU), the corresponding
 throughput, the number of threads per block of the minimum, and the registers per
 thread of the kernel. With --markdown, it prints the two times in GitHub Markdown,
-with links to the sources relative to the root of the repository
+fastest first, with links to the sources relative to the root of the repository
 (results/update.py puts them in README.md); with --tsv, one line per generator,
 with full precision (read by the script that updates the website)."""
 import collections, glob, os, re, sys
@@ -92,7 +92,8 @@ if fmt == "markdown":
     print()
     print("| PRNG | ps/32 bits (GPU) | ps/32 bits (multiprocessor) |")
     print("|:--|--:|--:|")
-    for g, name, _ in GENS:
+    # Fastest first
+    for g, name, _ in sorted(GENS, key=lambda x: best[x[0]][0]):
         # Asterisks of scramblers escaped, as Markdown would take them as emphasis
         label = name.replace("*", "\\*")
         print(f"| [{label}](gpu/{quote(g + '-gpu-speed.cu')}) | {1000 * best[g][0]:.3f} | {1000 * sms * best[g][0]:.1f} |")
@@ -101,7 +102,7 @@ if fmt == "markdown":
     cuda = search(r"V?(\d+\.\d+)", nvcc)
     print()
     print(f"{gpu}{clock} ({sms} multiprocessors); nvcc {cuda}; ps per 32-bit output of the whole GPU "
-          f"and of a multiprocessor, minimum of five runs.")
+          f"and of a multiprocessor, minimum of five runs, fastest first.")
     sys.exit()
 
 print("GPU timings")
