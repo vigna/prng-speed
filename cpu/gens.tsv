@@ -49,6 +49,8 @@ Lehmer128	other	congruential/lehmer128-speed.c	int
 SplitMix	other	other/splitmix64-speed.c	int	
 wyrand	other	other/wyrand-speed.c	int	
 wyrand-novec	other	other/wyrand-speed.c	novec	
+Sirius64	other	other/sirius64-speed.c	int	
+Sirius64-novec	other	other/sirius64-speed.c	novec	
 xoshiro512+	other	xoshiro/xoshiro512+-speed.c	int	-DA=11 -DB=21
 xoshiro512++	other	xoshiro/xoshiro512++-speed.c	int	-DA=11 -DB=21 -DR=17
 xoshiro512**	other	xoshiro/xoshiro512**-speed.c	int	-DA=11 -DB=21 -DS=5 -DR=7 -DT=9
